@@ -872,14 +872,17 @@ build_set_args([{ApiHeader, Default, FSHeader}|Headers], JObj, Args) ->
 %% Conference command helpers
 %% @end
 %%--------------------------------------------------------------------
+get_conf_id_and_profile(JObj) ->
+    ConfName = wh_json:get_value(<<"Conference-ID">>, JObj),
+    ProfileName = wh_json:get_value(<<"Profile">>, JObj, <<"default_", ConfName/binary>>),
+    {ConfName, ProfileName}.
+
 -spec get_conference_app(atom(), ne_binary(), wh_json:object(), boolean()) ->
                                 {ne_binary(), ne_binary(), atom()} |
                                 {ne_binary(), 'noop' | ne_binary()}.
 get_conference_app(ChanNode, UUID, JObj, 'true') ->
-    ConfName = wh_json:get_value(<<"Conference-ID">>, JObj),
-    ConferenceConfig = wh_json:get_value(<<"Profile">>, JObj, <<"default">>),
+    {ConfName, ConferenceConfig} = get_conf_id_and_profile(JObj),
     Cmd = list_to_binary([ConfName, "@", ConferenceConfig, get_conference_flags(JObj)]),
-
     case ecallmgr_fs_conferences:node(ConfName) of
         {'error', 'not_found'} ->
             maybe_start_conference_on_our_node(ChanNode, UUID, JObj);
@@ -896,9 +899,9 @@ get_conference_app(ChanNode, UUID, JObj, 'true') ->
             ecallmgr_util:export(ConfNode, UUID, [{<<"Hold-Media">>, <<"silence">>}]),
             {<<"conference">>, Cmd, ConfNode}
     end;
+
 get_conference_app(ChanNode, UUID, JObj, 'false') ->
-    ConfName = wh_json:get_value(<<"Conference-ID">>, JObj),
-    ConferenceConfig = wh_json:get_value(<<"Profile">>, JObj, <<"default">>),
+    {ConfName, ConferenceConfig} = get_conf_id_and_profile(JObj),
     maybe_set_nospeak_flags(ChanNode, UUID, JObj),
     %% ecallmgr_util:export(ChanNode, UUID, [{<<"Hold-Media">>, <<"silence">>}]),
     {<<"conference">>, list_to_binary([ConfName, "@", ConferenceConfig, get_conference_flags(JObj)])}.
@@ -907,8 +910,7 @@ get_conference_app(ChanNode, UUID, JObj, 'false') ->
                                                 {ne_binary(), ne_binary(), atom()} |
                                                 {ne_binary(), 'noop' | ne_binary()}.
 maybe_start_conference_on_our_node(ChanNode, UUID, JObj) ->
-    ConfName = wh_json:get_value(<<"Conference-ID">>, JObj),
-    ConferenceConfig = wh_json:get_value(<<"Profile">>, JObj, <<"default">>),
+    {ConfName, ConferenceConfig} = get_conf_id_and_profile(JObj),
     Cmd = list_to_binary([ConfName, "@", ConferenceConfig, get_conference_flags(JObj)]),
 
     lager:debug("conference ~s hasn't been started yet", [ConfName]),
