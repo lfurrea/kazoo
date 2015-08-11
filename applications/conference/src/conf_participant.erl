@@ -504,7 +504,7 @@ sync_participant(JObj, Call, #participant{in_conference='true'}=Participant) ->
     Participants = wh_json:get_value(<<"Participants">>, JObj, []),
     case find_participant(Participants, whapps_call:call_id(Call)) of
         {'ok', Participator} ->
-            lager:debug("caller has is still in the conference", []),
+            lager:debug("caller has is still in the conference"),
             Participant#participant{in_conference='true'
                                     ,muted=(not wh_json:is_true(<<"Speak">>, Participator))
                                     ,deaf=(not wh_json:is_true(<<"Hear">>, Participator))
@@ -627,11 +627,10 @@ send_conference_command(Conference, Call) ->
                  ,whapps_conference:member_join_deaf(Conference)
                 }
         end,
-    Command = [{<<"Application-Name">>, <<"conference">>}
-               ,{<<"Conference-ID">>, whapps_conference:id(Conference)}
-               ,{<<"Mute">>, Mute}
-               ,{<<"Deaf">>, Deaf}
-               ,{<<"Moderator">>, whapps_conference:moderator(Conference)}
-               ,{<<"Profile">>, whapps_conference:profile(Conference)}
-              ],
-    whapps_call_command:send_command(Command, Call).
+    whapps_call_command:conference(whapps_conference:id(Conference)
+                                   ,Mute
+                                   ,Deaf
+                                   ,whapps_conference:moderator(Conference)
+                                   ,whapps_conference:profile(Conference)
+                                   ,Call
+                                  ).

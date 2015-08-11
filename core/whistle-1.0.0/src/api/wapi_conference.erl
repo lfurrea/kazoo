@@ -319,14 +319,14 @@
 -define(CONFERENCE_ERROR_TYPES, []).
 
 -define(CONFIG_REQ_HEADERS, [<<"Profile">>]).
--define(OPTIONAL_CONFIG_REQ_HEADERS, []).
+-define(OPTIONAL_CONFIG_REQ_HEADERS, [<<"Max-Participants">>]).
 -define(CONFIG_REQ_VALUES, [{<<"Event-Category">>, <<"conference">>}
                             ,{<<"Event-Name">>, <<"config_req">>}
                            ]).
 -define(CONFIG_REQ_TYPES, []).
 
 -define(CONFIG_RESP_HEADERS, [<<"Profiles">>]).
--define(OPTIONAL_CONFIG_RESP_HEADERS, [<<"Caller-Controls">>, <<"Advertise">>, <<"Chat-Permissions">>]).
+-define(OPTIONAL_CONFIG_RESP_HEADERS, [<<"Caller-Controls">>, <<"Advertise">>, <<"Chat-Permissions">>, <<"Max-Participants">>]).
 -define(CONFIG_RESP_VALUES, [{<<"Event-Category">>, <<"conference">>}
                              ,{<<"Event-Name">>, <<"config_resp">>}
                             ]).

@@ -163,14 +163,16 @@ conference_resp_xml([_|_]=Resp) ->
     CCs = props:get_value(<<"Caller-Controls">>, Resp, wh_json:new()),
     As = props:get_value(<<"Advertise">>, Resp, wh_json:new()),
     CPs = props:get_value(<<"Chat-Permissions">>, Resp, wh_json:new()),
+    MPs = props:get_value(<<"Max-Participants">>, Resp, wh_json:new()),
 
     ProfilesEl = conference_profiles_xml(Ps),
     AdvertiseEl = advertise_xml(As),
     CallerControlsEl = caller_controls_xml(CCs),
     ChatPermsEl = chat_permissions_xml(CPs),
+    MaxPartsEls = max_participants_xml(MPs),
 
     ConfigurationEl = config_el(<<"conference.conf">>, <<"Built by Kazoo">>
-                                ,[AdvertiseEl, ProfilesEl, CallerControlsEl, ChatPermsEl]
+                                ,[AdvertiseEl, ProfilesEl, CallerControlsEl, ChatPermsEl] ++ MaxPartsEls
                                ),
 
     {'ok', xmerl:export([ConfigurationEl], 'fs_xml')};
@@ -210,6 +212,11 @@ chat_permissions_xml(CPs) -> chat_permissions_xml(wh_json:to_proplist(CPs)).
 profile_xml(Name, Users) ->
     UserEls = [chat_user_el(User, Commands) || {User, Commands} <- wh_json:to_proplist(Users)],
     profile_el(Name, UserEls).
+
+max_participants_xml(MaxParts) when is_list(MaxParts) ->
+    max_members_el(props:get_value('max-members', MaxParts))
+        ++ max_members_sound_el(props:get_value('max-members-sound', MaxParts));
+max_participants_xml(MaxParts) -> max_participants_xml(wh_json:to_proplist(MaxParts)).
 
 conference_profile_xml(Name, Params) ->
     ParamEls = [param_el(K, V) || {K, V} <- wh_json:to_proplist(Params)],
@@ -763,6 +770,20 @@ control_el(Action, Digits, Data) ->
                              ,xml_attrib('data', Data)
                             ]
                }.
+
+-spec max_members_el(api_integer()) -> [xml_el()].
+max_members_el('undefined') -> [];
+max_members_el(MaxParticipants) ->
+    [#xmlElement{name='max-members'
+                 ,content=MaxParticipants
+                }].
+
+-spec max_members_sound_el(api_binary()) -> [xml_el()].
+max_members_sound_el('undefined') -> [];
+max_members_sound_el(Path) ->
+    [#xmlElement{name='max-members-sound'
+                 ,content=Path
+                }].
 
 advertise_el(Rooms) ->
     #xmlElement{name='advertise'
